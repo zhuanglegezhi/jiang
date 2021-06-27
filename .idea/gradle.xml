@@ -5,11 +5,33 @@
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/leetcode" />
+        <option name="gradleHome" value="$USER_HOME$/coding/tools/gradle-4.10.2" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/leetcode" />
+          </set>
+        </option>
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/note" />
         <option name="gradleHome" value="$USER_HOME$/coding/tools/gradle-4.10.2" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/note" />
+          </set>
+        </option>
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/study" />
+        <option name="gradleHome" value="$USER_HOME$/coding/tools/gradle-4.10.2" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/study" />
           </set>
         </option>
         <option name="useQualifiedModuleNames" value="true" />
