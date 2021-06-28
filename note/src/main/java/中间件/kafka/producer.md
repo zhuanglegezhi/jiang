@@ -19,3 +19,7 @@ Kafka内部会自动为每个Producer分配一个producer id(PID)，broker端会
 refer：
 http://matt33.com/2018/11/04/kafka-transaction/
 http://matt33.com/2018/10/24/kafka-idempotent/
+
+### BufferPool
+
+Refer：https://objcoding.com/2020/09/13/kafka-producer-cache-pool/
