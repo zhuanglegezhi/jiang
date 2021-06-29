@@ -1,0 +1,7 @@
+.gradle
+.idea
+gradle
+logs
+build
+pre-production
+*.iml
