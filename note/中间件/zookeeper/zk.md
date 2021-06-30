@@ -29,3 +29,7 @@ zxid: 事务id
 - LOOKING，正在寻找 Leader，处于此阶段的办事处不能对外提供服务
 - LEADING，当前办事处就是 Leader，可以对外提供服务
 - FOLLOWING，当前办事处正在跟随 Leader，可以对外提供服务
+
+脑裂
+refer:
+https://juejin.cn/post/6844903895387340813
