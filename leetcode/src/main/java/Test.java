@@ -1,4 +1,5 @@
-import lc.L39;
+import lc.L40;
+import lc.L78;
 
 /**
  * Created by zz on 2021/6/27.
@@ -6,8 +7,8 @@ import lc.L39;
 public class Test {
 
     public static void main(String[] args) {
-        int arr[] = new int[]{2, 3, 6, 7};
-        System.out.println(new L39().combinationSum(arr, 7));
+        int arr[] = new int[]{1,2,3};
+        System.out.println(new L78().subsets(arr));
     }
 
 }
