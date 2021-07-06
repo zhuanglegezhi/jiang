@@ -1,5 +1,4 @@
-import lc.L40;
-import lc.L78;
+import lc.L90;
 
 /**
  * Created by zz on 2021/6/27.
@@ -7,8 +6,8 @@ import lc.L78;
 public class Test {
 
     public static void main(String[] args) {
-        int arr[] = new int[]{1,2,3};
-        System.out.println(new L78().subsets(arr));
+        int arr[] = new int[]{1, 2, 2};
+        System.out.println(new L90().subsetsWithDup(arr));
     }
 
 }
