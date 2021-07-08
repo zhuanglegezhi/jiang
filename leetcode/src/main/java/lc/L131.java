@@ -8,16 +8,16 @@ import java.util.List;
  */
 public class L131 {
 
-    private List<List<String>> ret = new ArrayList<>();
 
     public List<List<String>> partition(String s) {
+        List<List<String>> ret = new ArrayList<>();
         if (s == null || s.length() == 0) return ret;
         char[] arr = s.toCharArray();
-        dfs(arr, new ArrayList<>(), 0);
+        dfs(ret, arr, new ArrayList<>(), 0);
         return ret;
     }
 
-    private void dfs(char[] arr, List<String> path, int start) {
+    private void dfs(List<List<String>> ret, char[] arr, List<String> path, int start) {
         if (start == arr.length) {
             ret.add(new ArrayList<>(path));
             return;
@@ -29,7 +29,7 @@ public class L131 {
                 continue;
             } else {
                 path.add(tmp);
-                dfs(arr, path, i + 1);
+                dfs(ret, arr, path, i + 1);
                 path.remove(path.size() - 1);
             }
 
