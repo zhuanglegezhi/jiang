@@ -25,9 +25,7 @@ public class L131 {
 
         for (int i = start; i < arr.length; i++) {
             String tmp = concatValid(arr, start, i);
-            if (tmp == null) {
-                continue;
-            } else {
+            if (tmp != null) {
                 path.add(tmp);
                 dfs(ret, arr, path, i + 1);
                 path.remove(path.size() - 1);
