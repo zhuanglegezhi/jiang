@@ -26,6 +26,48 @@ refer: [进程切换](http://guojing.me/linux-kernel-architecture/posts/process-
 
 
 
+### IO
+
+#### 1、同步阻塞IO(BIO)
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/GLeh42uInXTyY80RSpUTLjIMiaGGicv9zAadgqoGRuEcAClAdesz7WTGhq6ugGbCKNiaghwqyAJJBC1GtVuYpkkmA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+
+
+
+
+#### 2、同步非阻塞IO（NIO）
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/GLeh42uInXTyY80RSpUTLjIMiaGGicv9zA4NCGPZZo9ydSiczrguMdwqFNvibGlzbaopiauFxTqrIa5po5faEAoY7HA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+#### 3、IO多路复用
+
+- IO 多路复用是一种**同步**IO模型，实现一个线程可以监视多个文件句柄；
+- 一旦某个文件句柄就绪，就能够通知应用程序进行相应的读写操作；
+- 没有文件句柄就绪就会阻塞应用程序，交出CPU。
+
+```
+多路是指网络连接，复用指的是同一个线程
+```
+
+
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/GLeh42uInXTyY80RSpUTLjIMiaGGicv9zAr5qibfgLBad0zoCEWXxdqC9I4v4mAYLR2SiafwtG4qOmdicHxa1Sx8MKQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+三种实现
+
+- select
+- poll
+- epoll
+
+refer:
+
+https://www.huaweicloud.com/articles/11750f7c569c6df1494f5790b4edfb85.html
+
+
+
+
+
 
 - `sync`: 函数只是将所有修改过的块缓冲区加入写队列，然后就返回，它并不等待实际写磁盘操作结束。所以不要觉得调用了sync函数，就觉得数据已安全的送到磁盘文件上，有可能会出现故障，可是sync函数是无法得知的.通常称为update的系统守护进程会周期性地（一般每隔30秒）调用sync函数。这就保证了定期冲洗内核的块缓冲区。命令sync(1)也调用sync函数**。sync是全局的，对整个系统都flush。**
 - `fsync`: 函数**只针对单个文件**，只对由文件描述符filedes指定的单一文件起作用，并且等待写磁盘操作结束，然后返回。fsync不仅会同步更新文件数据，还会同步更新文件的属性（比如atime,mtime等）。fsync可用于数据库这样的应用程序，这种应用程序需要确保将修改过的块立即写到磁盘上。
