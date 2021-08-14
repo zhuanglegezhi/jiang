@@ -1,4 +1,4 @@
-package 面试题;
+package mst;
 
 import java.util.ArrayList;
 import java.util.List;

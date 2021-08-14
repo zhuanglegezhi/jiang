@@ -1,4 +1,4 @@
-package 面试题;
+package mst;
 
 /**
  * Created by zz on 2021/8/11.
