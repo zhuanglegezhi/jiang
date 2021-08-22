@@ -26,7 +26,33 @@ refer: [进程切换](http://guojing.me/linux-kernel-architecture/posts/process-
 
 
 
-### IO
+## IO
+
+#### 同步
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/vnOqylzBGCSibs7oFibEqA16oRfPiaiaJPSuCd3xM837gyLmjrI1QlDJfXHUcfOBd1Y60IoVCULX34ByVH82sXYjrg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+
+
+#### 异步
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/vnOqylzBGCSibs7oFibEqA16oRfPiaiaJPSuNU8lqJ0LiaaCnh1MzLCEqq9uvPTYsHv1r3aa4q5LKMff8ccwfBLB6Xw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+
+
+### **阻塞与非阻塞**
+
+实际上阻塞与非阻塞的概念，通常是针对底层的IO操作来说的。
+
+#### 阻塞
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/vnOqylzBGCSibs7oFibEqA16oRfPiaiaJPSu7hfFUedVIluHwQWKc0PhyqRFEEppELH9gtsxcZ4JhIic1aylFBG67wA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+#### 非阻塞
+
+![图片](https://mmbiz.qpic.cn/mmbiz_png/vnOqylzBGCSibs7oFibEqA16oRfPiaiaJPSufwfMuNfylAsGMKicumNJibPYbH8Paz29wbfJZJNrXibUhBeACic0OYybIQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+
 
 #### 1、同步阻塞IO(BIO)
 
