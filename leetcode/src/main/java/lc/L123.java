@@ -32,4 +32,22 @@ public class L123 {
         int max = new L123().maxProfit(new int[]{1, 2, 3, 4, 5});
     }
 
+
+    public int maxProfitV2(int[] prices) {
+        if (prices == null || prices.length < 2) return 0;
+        int[][][] dp = new int[prices.length][3][2];
+        for (int _k = 0; _k <= 2; _k++) {
+            dp[0][_k][0] = 0;
+            dp[0][_k][1] = -prices[0];
+        }
+
+        for (int i = 1; i < prices.length; i++) {
+            for (int k = 1; k <= 2; k++) {
+                dp[i][k][0] = Math.max(dp[i - 1][k][0], dp[i - 1][k][1] + prices[i]);
+                dp[i][k][1] = Math.max(dp[i - 1][k][1], dp[i - 1][k - 1][0] - prices[i]);
+            }
+        }
+        return dp[prices.length - 1][2][0];
+    }
+
 }
