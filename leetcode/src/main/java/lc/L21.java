@@ -4,32 +4,32 @@ package lc;
  * Created by zz on 2021/7/12.
  */
 public class L21 {
-    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
-        if (l1 == null && l2 == null) return null;
-        ListNode head = new ListNode();
-        ListNode cur = head;
 
-        while (l1 != null || l2 != null) {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode dummy = new ListNode();
+        ListNode cur = dummy;
+        while (l1 != null && l2 != null) {
             ListNode node = new ListNode();
-            cur.next = node;
-            if (l1 != null && l2 != null) {
-                if (l1.val <= l2.val) {
-                    node.val = l1.val;
-                    l1 = l1.next;
-                } else {
-                    node.val = l2.val;
-                    l2 = l2.next;
-                }
-            } else if (l1 != null) {
+            if (l1.val <= l2.val) {
                 node.val = l1.val;
                 l1 = l1.next;
-            } else if (l2 != null) {
+            } else {
                 node.val = l2.val;
                 l2 = l2.next;
             }
+
+            cur.next = node;
             cur = cur.next;
         }
-        return head.next;
+
+        if (l1 != null) {
+            cur.next = l1;
+        }
+        if (l2 != null) {
+            cur.next = l2;
+        }
+
+        return dummy.next;
     }
 
     public class ListNode {
