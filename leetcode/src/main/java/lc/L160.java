@@ -11,6 +11,7 @@ public class L160 {
         while (curA != curB) {
             curA = curA.next;
             curB = curB.next;
+            // 没交点的话，pathA + pathB  = pathB + pathA, 会同时为null, 所以用&&判断
             if (curA == null && curB == null) {
                 return null;
             }
