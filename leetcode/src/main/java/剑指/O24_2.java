@@ -1,9 +1,9 @@
-package lc;
+package 剑指;
 
 /**
- * Created by zz on 2021/7/20.
+ * Created by zz on 2021/10/20.
  */
-public class L206 {
+public class O24_2 {
 
     public ListNode reverseList(ListNode head) {
         ListNode pre = null;
@@ -33,5 +33,4 @@ public class L206 {
             this.next = next;
         }
     }
-
 }
