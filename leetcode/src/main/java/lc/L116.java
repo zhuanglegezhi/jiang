@@ -31,6 +31,20 @@ public class L116 {
         return root;
     }
 
+    public Node connectV2(Node root) {
+        if (root == null) return null;
+        connect(root.left, root.right);
+        return root;
+    }
+
+    private void connect(Node left, Node right) {
+        if (left == null || right == null) return;
+        left.next = right;
+        connect(left.left, left.right);
+        connect(right.left, right.right);
+        connect(left.right, right.left);
+    }
+
     class Node {
         public int val;
         public Node left;

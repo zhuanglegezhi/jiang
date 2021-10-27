@@ -1,8 +1,5 @@
 package com.pdd.search.pes.v2.asyn;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -21,7 +18,7 @@ public class AsyncExecutor {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
 
-//    @Autowired
+    //    @Autowired
     private Executor taskExecutor;
 
 
@@ -35,9 +32,11 @@ public class AsyncExecutor {
 
     private <T> CompletableFuture<T> failAfter(CompletableFuture<T> future, long millis) {
         scheduler.schedule(() -> {
-            final TimeoutException ex = new TimeoutException("Timeout after " + millis + " millis");
-            return future.completeExceptionally(ex);
-        }, millis, TimeUnit.MILLISECONDS);
+                    final TimeoutException ex = new TimeoutException("Timeout after " + millis + " millis");
+                    return future.completeExceptionally(ex);
+                },
+                millis,
+                TimeUnit.MILLISECONDS);
         return future;
     }
 
