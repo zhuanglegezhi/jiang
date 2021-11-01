@@ -25,30 +25,14 @@ public class L701 {
     }
 
     public TreeNode insertIntoBST(TreeNode root, int val) {
-        TreeNode dummy = new TreeNode(Integer.MAX_VALUE);
-        dummy.left = root;
-        dfs(dummy, root, val);
-        return dummy.left;
-    }
-
-    private void dfs(TreeNode parent, TreeNode root, int val) {
-        if (root == null) {
-            if (parent == null) {
-                return;
-            } else {
-                if (parent.val > val) {
-                    parent.left = new TreeNode(val);
-                }else {
-                    parent.right = new TreeNode(val);
-                }
-                return;
-            }
-        }
-
-        if (root.val > val) {
-            dfs(root, root.left, val);
+        if (root == null) return new TreeNode(val);
+        if (root.val < val) {
+            root.right = insertIntoBST(root.right, val);
         } else {
-            dfs(root, root.right, val);
+            root.left = insertIntoBST(root.left, val);
+
         }
+        return root;
     }
+
 }
