@@ -42,7 +42,7 @@ public class L174 {
                 dp(grid, i, j + 1),
                 dp(grid, i + 1, j)
         ) - grid[i][j];
-        // 骑士的生命值至少为 1
+        // 骑士的生命值至少≈为 1
         dp[i][j] = res <= 0 ? 1 : res;
 
         return dp[i][j];
