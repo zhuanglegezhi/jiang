@@ -25,17 +25,7 @@
 
 **zxid：**类似于 RDBMS 中的事务 ID，用于标识一次更新操作的 Proposal ID。为了保证顺序性，该 zkid 必须单调递增。因此 Zookeeper 使用一个 64 位的数来表示，高 32 位是 Leader 的 epoch，从1开始，每次选出新的 Leader，epoch 加一。低 32 位为该 epoch 内的序号，每次 epoch 变化，都将低 32 位的序号重置。这样保证了 zkid 的全局递增性。
 
-
-
-#### 节点状态
-
-- **LOOKING**，不确定 Leader 状态。该状态下的服务器认为当前集群中没有 Leader，会发起 Leader 选举。
-
-- **FOLLOWING：**跟随者状态。表明当前服务器角色是 Follower，并且它知道 Leader 是谁。
-
-- **LEADING：**领导者状态。表明当前服务器角色是 Leader，它会维护与 Follower 间的心跳。
-
-- **OBSERVING：**观察者状态。表明当前服务器角色是 Observer，与 Folower 唯一的不同在于不参与选举，也**不参与集群写操作时的投票。**
+- 
 
   
 
@@ -116,3 +106,17 @@ Zookeeper 规定所有有效的投票都必须在同一轮次中。每个服务�
 2）Zab协议中 Leader 等待 Follower 的ACK反馈消息是指"**只要半数以上的Follower成功反馈即可，不需要收到全部Follower反馈**"
 
 > https://www.huaweicloud.com/articles/b696779df9cf3272db9695a83efae29f.html
+
+
+
+
+
+## 节点状态
+
+- **LOOKING**：Leader选举阶段
+
+- **FOLLOWING：**跟随者状态。表明当前服务器角色是 Follower，并且它知道 Leader 是谁。
+
+- **LEADING：**领导者状态。表明当前服务器角色是 Leader，它会维护与 Follower 间的心跳。
+
+  
