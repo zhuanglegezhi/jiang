@@ -12,6 +12,8 @@
 
 
 
+
+
 ### 对象头
 
 synchronized用的锁是存在Java对象头里的
