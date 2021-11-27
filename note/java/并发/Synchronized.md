@@ -10,6 +10,51 @@
 
 通过**monitorenter**和**monitorexit**指令实现
 
+1. MonitorEnter指令
+   - 插入在同步代码块的开始位置，当代码执行到该指令时，将会尝试获取该对象Monitor的所有权，即尝试获得该对象的锁
+2. MonitorExit指令
+   - 插入在方法结束处和异常处，JVM保证每个MonitorEnter必须有对应的MonitorExit
+
+
+
+### Monitor对象
+
+```c++
+ObjectMonitor() {
+    _header       = NULL;
+    _count        = 0; // 记录个数
+    _waiters      = 0,
+    _recursions   = 0;
+    _object       = NULL;
+    _owner        = NULL;
+    _WaitSet      = NULL; // 处于wait状态的线程，会被加入到_WaitSet
+    _WaitSetLock  = 0 ;
+    _Responsible  = NULL ;
+    _succ         = NULL ;
+    _cxq          = NULL ;
+    FreeNext      = NULL ;
+    _EntryList    = NULL ; // 处于等待锁block状态的线程，会被加入到该列表
+    _SpinFreq     = 0 ;
+    _SpinClock    = 0 ;
+    OwnerIsThread = 0 ;
+  }
+```
+
+ObjectMonitor中有两个队列，_WaitSet 和 _EntryList，用来保存ObjectWaiter对象列表（ 每个等待锁的线程都会被封装成ObjectWaiter对象 ），_owner指向持有ObjectMonitor对象的线程，当多个线程同时访问一段同步代码时：
+
+> 1. 首先会进入 _EntryList 集合，当线程获取到对象的monitor后，进入 _Owner区域并把monitor中的owner变量设置为当前线程，同时monitor中的计数器count加1
+> 2. 若线程调用 wait() 方法，将释放当前持有的monitor，owner变量恢复为null，count自减1，同时该线程进入 WaitSet集合中等待被唤醒
+> 3. 若当前线程执行完毕，也将释放monitor（锁）并复位count的值，以便其他线程进入获取monitor(锁)；
+
+同时**，Monitor对象存在于每个Java对象的对象头Mark Word中（存储的指针的指向），Synchronized锁便是通过这种方式获取锁的，也是为什么Java中任意对象可以作为锁的原因，同时notify/notifyAll/wait等方法会使用到Monitor锁对象，所以必须在同步代码块中使用。**
+
+![img](../../图片/2062729-d1cc81ebcf0e912b.png)
+
+如上图所示，一个线程通过1号门进入Entry Set(入口区)，如果在入口区没有线程等待，那么这个线程就会获取监视器成为监视器的Owner，然后执行监视区域的代码。如果在入口区中有其它线程在等待，那么新来的线程也会和这些线程一起等待。线程在持有监视器的过程中，有两个选择，一个是正常执行监视器区域的代码，释放监视器，通过5号门退出监视器；还有可能等待某个条件的出现，于是它会通过3号门到Wait Set（等待区）休息，直到相应的条件满足后再通过4号门进入重新获取监视器再执行。
+
+注意：
+
+> 当一个线程释放监视器时，在入口区和等待区的等待线程都会去竞争监视器，如果入口区的线程赢了，会从2号门进入；如果等待区的线程赢了会从4号门进入。只有通过3号门才能进入等待区，在等待区中的线程只有通过4号门才能退出等待区，也就是说一个线程只有在持有监视器时才能执行wait操作，处于等待的线程只有再次获得监视器才能退出等待状态。
 
 
 
