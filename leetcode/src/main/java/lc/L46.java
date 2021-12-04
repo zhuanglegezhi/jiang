@@ -8,28 +8,30 @@ import java.util.List;
  */
 public class L46 {
 
+    private List<List<Integer>> ans = new ArrayList<>();
+
     public List<List<Integer>> permute(int[] nums) {
-        List<List<Integer>> ret = new ArrayList<>();
         boolean[] used = new boolean[nums.length];
-        dfs(ret, nums, used, new ArrayList<>());
-        return ret;
+        dfs(nums, used, new ArrayList<>());
+        return ans;
     }
 
-    private void dfs(List<List<Integer>> ret, int[] nums, boolean[] used, List<Integer> tmp) {
-        if (tmp.size() == nums.length) {
-            ret.add(new ArrayList<>(tmp));
+    private void dfs(int[] nums, boolean[] used, List<Integer> path) {
+        if (path.size() == nums.length) {
+            ans.add(new ArrayList<>(path));
             return;
         }
 
         for (int i = 0; i < nums.length; i++) {
             if (!used[i]) {
                 used[i] = true;
-                tmp.add(nums[i]);
-                dfs(ret, nums, used, tmp);
+                path.add(nums[i]);
+                dfs(nums, used, path);
 
                 used[i] = false;
-                tmp.remove(tmp.size() - 1);
+                path.remove(path.size() - 1);
             }
         }
     }
+
 }

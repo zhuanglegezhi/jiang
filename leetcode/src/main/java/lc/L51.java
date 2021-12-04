@@ -9,26 +9,26 @@ import java.util.List;
  */
 public class L51 {
 
-    List<List<String>> ans = new ArrayList<>();
+    private static final char Q = 'Q';
+    private static final char NOT_Q = '.';
+    private final List<List<String>> ans = new ArrayList<>();
 
 
     public List<List<String>> solveNQueens(int n) {
         char[][] board = new char[n][n];
         for (int i = 0; i < n; i++) {
             char[] row = new char[n];
-            Arrays.fill(row, '.');
+            Arrays.fill(row, NOT_Q);
             board[i] = row;
         }
-
         backtrack(board, 0);
         return ans;
     }
 
     private void backtrack(char[][] board, int row) {
-        int N = board.length;
-
-        if (row == N) {
-            List<String> solution = new ArrayList<>(N);
+        int n = board.length;
+        if (row == n) {
+            List<String> solution = new ArrayList<>(n);
             for (char[] arr : board) {
                 StringBuilder sb = new StringBuilder();
                 for (char c : arr) {
@@ -38,41 +38,43 @@ public class L51 {
             }
 
             ans.add(solution);
+            // 加结果
             return;
         }
 
-        for (int col = 0; col < N; col++) {
-            if (!isValid(board, row, col)) {
-                continue;
+        for (int col = 0; col < n; col++) {
+            if (valid(board, row, col)) {
+                board[row][col] = Q;
+                backtrack(board, row + 1);
+                board[row][col] = NOT_Q;
             }
-
-            board[row][col] = 'Q';
-            backtrack(board, row + 1);
-            board[row][col] = '.';
         }
     }
 
-    private boolean isValid(char[][] path, int row, int col) {
+    private boolean valid(char[][] board, int row, int col) {
+        int n = board.length;
         // 同列不行
         for (int i = 0; i < row; i++) {
-            if (path[i][col] == 'Q')
+            if (board[i][col] == Q) {
                 return false;
+            }
         }
 
         // 左上方判断
         for (int i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
-            if (path[i][j] == 'Q')
+            if (board[i][j] == Q)
                 return false;
         }
 
         // 右上方判断
-        for (int i = row - 1, j = col + 1; i >= 0 && j < path.length; i--, j++) {
-            if (path[i][j] == 'Q')
+        for (int i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++) {
+            if (board[i][j] == Q)
                 return false;
         }
 
         return true;
     }
+
 
     public static void main(String[] args) {
         List<List<String>> ans = new L51().solveNQueens(4);
