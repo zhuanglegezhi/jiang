@@ -75,7 +75,6 @@ public class L51 {
         return true;
     }
 
-
     public static void main(String[] args) {
         List<List<String>> ans = new L51().solveNQueens(4);
         int a = 0;
