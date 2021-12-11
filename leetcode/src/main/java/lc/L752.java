@@ -14,6 +14,7 @@ public class L752 {
 
     public int openLock(String[] deadends, String target) {
         if (target.equals(INIT)) return 0;
+
         Queue<String> queue = new LinkedList<>();
         Set<String> visited = new HashSet<>();
         for (String dead : deadends) {
@@ -30,6 +31,7 @@ public class L752 {
             int levelSize = queue.size();
             for (int i = 0; i < levelSize; i++) {
                 String cur = queue.poll();
+
                 if (target.equals(cur)) return step;
 
                 for (int j = 0; j < 4; j++) {
