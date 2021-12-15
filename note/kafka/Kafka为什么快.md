@@ -110,3 +110,5 @@ Kafka 在这里采用的方案是通过 NIO 的 `transferTo/transferFrom` 调用
 ### 参考
 
 > https://zhuanlan.zhihu.com/p/78335525
+>
+> https://mp.weixin.qq.com/s/iy1UqDYuai_3UnusZ-jq4w
