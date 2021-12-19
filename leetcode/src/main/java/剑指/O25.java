@@ -4,6 +4,7 @@ package 剑指;
  * Created by zz on 2021/6/28.
  */
 public class O25 {
+
     public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
         if (l1 == null && l2 == null) return null;
         ListNode curr = new ListNode(-1);
