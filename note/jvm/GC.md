@@ -2,7 +2,7 @@
 
 
 
-## 1.可达性分析算法
+## 1. 可达性分析算法
 
 - **基本思想**
 
@@ -16,7 +16,7 @@
 
 
 
-## 2.引用
+## 2. 引用
 
 强引用（Strong Reference)、软引用（Soft Reference)、弱引用（Weak Reference)、虚引用（Phantom Reference)，这四种引用从上到下，依次减弱
 
@@ -212,7 +212,7 @@ public class PhantomReference<T> extends Reference<T> {
 
 
 
-## 0.三色标记算法
+## 三色标记算法
 
 ### 思想
 
@@ -239,7 +239,7 @@ public class PhantomReference<T> extends Reference<T> {
 
 
 
-## 1.CMS
+## 1. CMS
 
 - 收集器是一种以获取最短回收停顿时间为目标的收集器
 - 算法：标记—清除
@@ -290,7 +290,7 @@ public class PhantomReference<T> extends Reference<T> {
 
 
 
-## 2.G1 (Garbage-First Garbage Collector)
+## 2. G1 (Garbage-First Garbage Collector)
 
 - 分代垃圾收集器
 
@@ -316,7 +316,7 @@ public class PhantomReference<T> extends Reference<T> {
 
 
 
-#### Region
+### Region
 
 传统的GC收集器将连续的内存空间划分为新生代、老年代和永久代（JDK 8去除了永久代，引入了元空间Metaspace），这种划分的特点是各代的存储地址（逻辑地址，下同）**是连续**的。如下图所示：
 
@@ -334,17 +334,39 @@ public class PhantomReference<T> extends Reference<T> {
 
 ### SATB
 
-全称是Snapshot-At-The-Beginning，由字面理解，是GC开始时活着的对象的一个快照。它是通过Root Tracing得到的，作用是维持并发GC的正确性。 那么它是怎么维持并发GC的正确性的呢？
+全称是**Snapshot-At-The-Beginning**，是GC开始时活着的对象的一个快照。它是通过Root Tracing得到的，作用是维持并发GC的正确性。 那么它是怎么维持并发GC的正确性的呢？
 
 根据**三色标记**算法，我们知道对象存在三种状态： 
 
 - 白：对象没有被标记到，标记阶段结束后，会被当做垃圾回收掉。 
+
 - 灰：对象被标记了，但是它的field还没有被标记或标记完。 
+
 - 黑：对象被标记了，且它的所有field也被标记完了
 
+  
 
+### RSets
 
-#### YGC
+全称是Remembered Set，是辅助GC过程的一种结构，典型的空间换时间工具，和Card Table有些类似。还有一种数据结构也是辅助GC的：Collection Set（CSet），它记录了GC要收集的Region集合，集合里的Region可以是任意年代的。在GC的时候，对于old->young和old->old的跨代对象引用，只要扫描对应的CSet中的RSet即可。 逻辑上说每个Region都有一个RSet，**RSet记录了其他Region中的对象引用本Region中对象的关系，属于points-into结构（谁引用了我的对象）**。而Card Table则是一种points-out（我引用了谁的对象）的结构，每个Card 覆盖一定范围的Heap（一般为512Bytes）。G1的RSet是在Card Table的基础上实现的：每个Region会记录下别的Region有指向自己的指针，并标记这些指针分别在哪些Card的范围内。 这个RSet其实是一个Hash Table，Key是别的Region的起始地址，Value是一个集合，里面的元素是Card Table的Index。
+
+下图表示了RSet、Card和Region的关系（[出处](http://www.infoq.com/articles/tuning-tips-G1-GC)）：
+
+![Remembered Sets](../图片/5aea17be.jpg)
+
+上图中有三个Region，每个Region被分成了多个Card，在不同Region中的Card会相互引用，Region1中的Card中的对象引用了Region2中的Card中的对象，蓝色实线表示的就是points-out的关系，而在Region2的RSet中，记录了Region1的Card，即红色虚线表示的关系，这就是points-into。 而维系RSet中的引用关系靠post-write barrier和Concurrent refinement threads来维护，操作伪代码如下（[出处](http://hllvm.group.iteye.com/group/topic/44381)）：
+
+```c++
+void oop_field_store(oop* field, oop new_value) {
+  pre_write_barrier(field);             // pre-write barrier: for maintaining SATB invariant
+  *field = new_value;                   // the actual store
+  post_write_barrier(field, new_value); // post-write barrier: for tracking cross-region reference
+}
+```
+
+post-write barrier记录了跨Region的引用更新，更新日志缓冲区则记录了那些包含更新引用的Cards。一旦缓冲区满了，Post-write barrier就停止服务了，会由Concurrent refinement threads处理这些缓冲区日志。 RSet究竟是怎么辅助GC的呢？在做YGC的时候，只需要选定young generation region的RSet作为根集，**这些RSet记录了old->young的跨代引用，避免了扫描整个old generation**。 而mixed gc的时候，old generation中记录了old->old的RSet，young->old的引用由扫描全部young generation region得到，这样也不用扫描全部old generation region。所以RSet的引入大大减少了GC的工作量。
+
+### YGC
 
 选定**所有**年轻代里的Region。通过控制年轻代的region个数，即年轻代内存大小，来控制young GC的时间开销
 
@@ -356,23 +378,19 @@ public class PhantomReference<T> extends Reference<T> {
 
 
 
-#### Mixed GC
+### Mixed GC
 
 - 选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region。
 - Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（full GC）来收集整个GC heap。所以我们可以知道，G1是不提供full GC的。
 
 
 
-#### RememberedSet
-
-RSets全称为Remembered Sets，作用是跟踪从外部指向本小堆区的所有引用。主要是记录老年代到新生代之间的引用的一个集合（记录了“**谁引用了我**”），至于新生代之间的引用记录会在每次GC时被扫描，所以不用记录新生代到新生代之间的引用）（STW）
 
 
 
 
 
-
-### Refer
+## Refer
 
 >https://tech.meituan.com/2016/09/23/g1.html
 >
