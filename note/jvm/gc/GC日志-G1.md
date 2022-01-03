@@ -4,7 +4,7 @@
 
 
 
-![G1的新生代垃圾收集](../图片/16c127f0471dface~tplv-t2oaga2asx-watermark.awebp)
+![G1的新生代垃圾收集](../../图片/16c127f0471dface~tplv-t2oaga2asx-watermark.awebp)
 
 
 
@@ -111,7 +111,7 @@ G1的第二种收集活动是并发垃圾收集，并发垃圾收集的触发条
 
 在并发收集阶段结束后，你会看到混合收集阶段的日志，如下图所示，该日志的大部分跟之前讨论的新生代收集相同，只有第1部分不一样：**GC pause(G1 Evacuation Pause)(mixed),0.0129474s**，这一行表示这是一个混合垃圾收集周期；在混合垃圾收集处理的CSet不仅包括新生代的分区，还包括老年代分区——也就是并发标记阶段标记出来的那些老年代分区。
 
-![G1的混合收集](../图片/16c127f04ab0adc9~tplv-t2oaga2asx-watermark.awebp)
+![G1的混合收集](../../图片/16c127f04ab0adc9~tplv-t2oaga2asx-watermark.awebp)
 
 
 
@@ -125,13 +125,13 @@ G1的第二种收集活动是并发垃圾收集，并发垃圾收集的触发条
 
 
 
-![G1的Full GC](../图片/16c127f06b33bfc9~tplv-t2oaga2asx-watermark.awebp)
+![G1的Full GC](../../图片/16c127f06b33bfc9~tplv-t2oaga2asx-watermark.awebp)
 
 
 
 基础配置参数中，我这里还想介绍两个：`-XX:+PrintGCApplicationStoppedTime`和`-XX:+PrintGCApplicationConcurrentTime`，这两个参数也可以为你提供有用的信息，如下图所示：
 
-![其他信息](../图片/16c127f04c1d30bc~tplv-t2oaga2asx-watermark.awebp)
+![其他信息](../../图片/16c127f04c1d30bc~tplv-t2oaga2asx-watermark.awebp)
 
 
 
