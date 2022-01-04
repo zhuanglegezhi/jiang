@@ -22,5 +22,7 @@
 
 ### BufferPool
 
-Refer：https://objcoding.com/2020/09/13/kafka-producer-cache-pool/
+### Refer
+
+> https://objcoding.com/2020/09/13/kafka-producer-cache-pool/
 
