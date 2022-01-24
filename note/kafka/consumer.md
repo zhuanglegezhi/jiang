@@ -12,5 +12,3 @@ ISR
 OSR 
 
 LEO(Log End Offset)
-
-
