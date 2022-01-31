@@ -2,10 +2,10 @@ package juc;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Created by zz on 2021/10/20.
@@ -15,8 +15,8 @@ public class CompletableFutureTest {
     public static void main(String[] args) throws Exception {
 //        runAsync();
 //        supplyAsync();
-        whenComplete();
-        System.out.println("===============");
+//        whenComplete();
+//        System.out.println("===============");
         thenApply();
     }
 
@@ -75,24 +75,26 @@ public class CompletableFutureTest {
         TimeUnit.SECONDS.sleep(2);
     }
 
-    private static void thenApply() throws Exception {
-        CompletableFuture<Long> future = CompletableFuture.supplyAsync(new Supplier<Long>() {
-            @Override
-            public Long get() {
-                long result = new Random().nextInt(100);
-                System.out.println("result1=" + result);
-                return result;
+    public static void thenApply() {
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        CompletableFuture<String> cf = CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }).thenApply(new Function<Long, Long>() {
-            @Override
-            public Long apply(Long t) {
-                long result = t * 5;
-                System.out.println("result2=" + result);
-                return result;
-            }
-        });
+            System.out.println("supplyAsync " + Thread.currentThread().getName());
+            return "hello";
+        }, executorService).thenApplyAsync(s -> {
+            System.out.println(s + "world");
+            return "hhh";
+        }, executorService);
 
-        long result = future.get();
-        System.out.println(result);
+        cf.thenRunAsync(() -> System.out.println("ddddd"));
+        cf.thenRun(() -> System.out.println("ddddsd"));
+        cf.thenRun(() -> {
+            System.out.println(Thread.currentThread());
+            System.out.println("dddaewdd");
+        });
     }
 }
