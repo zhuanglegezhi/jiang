@@ -2,6 +2,7 @@ package juc;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,11 +18,13 @@ public class CompletableFutureTest {
 //        supplyAsync();
 //        whenComplete();
 //        System.out.println("===============");
-        thenApply();
+//        thenApply();
+        testCompute();
     }
 
     //无返回值
     public static void runAsync() throws Exception {
+
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -97,4 +100,34 @@ public class CompletableFutureTest {
             System.out.println("dddaewdd");
         });
     }
+
+    private static void testCompute() {
+
+        final CompletableFuture<Integer> f = new CompletableFuture<>();
+
+        class Client extends Thread {
+
+            CompletableFuture<Integer> f;
+
+            Client(String threadName, CompletableFuture<Integer> f) {
+                super(threadName);
+                this.f = f;
+            }
+
+            @Override
+            public void run() {
+                try {
+                    System.out.println(this.getName() + ": " + f.get());
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        new Client("Client1", f).start();
+        new Client("Client2", f).start();
+        System.out.println("waiting");
+        f.complete(100);
+        //f.completeExceptionally(new Exception());
+    }
+
 }

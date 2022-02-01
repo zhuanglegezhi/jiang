@@ -124,7 +124,7 @@ final CompletableFuture<Void> tryFire(int mode) {
 
 区别看下面代码。c不为null会调用c.claim方法。
 
-```
+```java
 try {
     if (c != null && !c.claim())
         return false;
@@ -166,9 +166,9 @@ public final void run(){
 
 如果任务没有完成，直接返回，因为等任务完成之后会通过postComplete去触发调用依赖任务。
 
-## postComplete方法
+## 5. postComplete方法
 
-```
+```java
 final void postComplete() {
     /*
      * On each step, variable f holds current dependents to pop
@@ -199,6 +199,8 @@ final void postComplete() {
 
 堆栈的内容其实就是在依赖任务创建的时候加入进去的。上面我们已经提到过。
 
+
+
 ## 4.总结
 
 基本上述源码已经分析了逻辑。
@@ -208,8 +210,6 @@ final void postComplete() {
 1. 创建CompletableFuture成功之后会通过异步线程去执行对应任务。
 2. 如果CompletableFuture还有依赖任务（异步），会将任务加入到CompletableFuture的堆栈保存起来。以供后续完成后执行依赖任务。
 
-> “
->
 > 当然，创建依赖任务并不只是将其加入堆栈。如果源任务在创建依赖任务的时候已经执行完成，那么当前线程会触发依赖任务的异步线程直接处理依赖任务。并且会告诉堆栈其他的依赖任务源任务已经完成。
 
 主要是考虑代码的复用。所以逻辑相对难理解。
