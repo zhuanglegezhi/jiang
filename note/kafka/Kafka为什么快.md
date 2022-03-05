@@ -1,4 +1,4 @@
-## 原因一：顺序读写磁盘
+# 原因一：顺序读写磁盘
 
 ![img](../图片/auto-orient,1.jpeg)
 
@@ -7,7 +7,7 @@
 
 
 
-## 原因二：Page Cache
+# 原因二：页缓存
 
 为了优化读写性能，Kafka利用了操作系统本身的Page Cache，就是利用操作系统自身的内存而不是JVM空间内存。这样做的好处有：
 
@@ -26,70 +26,77 @@
 
 
 
-## 原因三：零拷贝
+# 原因三：零拷贝
 
    - 零拷贝并不是不需要拷贝，而是减少不必要的拷贝次数
    - 数据直接在内核完成输入和输出，不需要拷贝到用户空间再写出去。
-     kafka数据写入磁盘前，数据先写到进程的内存空间。
-   - Customer从broker读取数据，采用sendfile，将磁盘文件读到OS内核缓冲区后，直接转到socket buffer进行网络发送。
+   - kafka数据写入磁盘前，数据先写到进程的内存空间。
+   - consumer从broker读取数据，采用sendfile，将磁盘文件读到OS内核缓冲区后，直接转到socket buffer进行网络发送。
 
-### **两个过程**
 
-### 过程一： 网络数据持久化到磁盘 (Producer 到 Broker)
+
+## 3.1 过程一： 网络数据持久化到磁盘 (Producer到Broker)
 
 传统模式下，数据从网络传输到文件需要 4 次数据拷贝、4 次上下文切换和两次系统调用。
 
-```
-data = socket.read()// 读取网络数据 
+```java
+data = socket.read()				// 读取网络数据 
 File file = new File() 
-file.write(data)// 持久化到磁盘 
+file.write(data)					  // 持久化到磁盘 
 file.flush()
 ```
 
-这一过程实际上发生了四次数据拷贝：
+### 3.1.1 这一过程实际上发生了**四次数据拷贝**：
 
-1. **首先通过 DMA copy 将网络数据拷贝到内核态 Socket Buffer**
-2. **然后应用程序将内核态 Buffer 数据读入用户态（CPU copy）**
-3. **接着用户程序将用户态 Buffer 再拷贝到内核态（CPU copy）**
-4. **最后通过 DMA copy 将数据拷贝到磁盘文件**
+1. 首先通过**DMA Copy**将网络数据拷贝到内核态 Socket Buffer
 
-同时，还伴随着四次上下文切换，如下图所示
+2. 然后应用程序将内核态 Buffer 数据读入用户态**（CPU Copy）**
+
+3. 接着用户程序将用户态 Buffer 再拷贝到内核态**（CPU Copy）**
+
+4. 最后通过 **DMA copy** 将数据拷贝到磁盘文件
+
+   
+
+### 3.1.2 同时，还伴随着**四次上下文切换**，
 
 ![img](../图片/fdfe29d209918316409200f10cf63ebd.png)
 
-对于 kafka 来说，Producer 生产的数据存到 broker，这个过程读取到 socket buffer 的网络数据，其实可以直接在内核空间完成落盘。并没有必要将 socket buffer 的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker 收到生产者的数据，就是为了持久化。
+对于 kafka 来说，Producer 生产的数据存到 broker，这个过程读取到 socket buffer 的网络数据，其实可以直接在内核空间完成落盘。并没有必要将 socket buffer的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker 收到生产者的数据，就是为了持久化。在此特殊场景下：接收来自 socket buffer 的网络数据，应用进程不需要中间处理、直接进行持久化时。**可以使用 mmap 内存文件映射**。
 
-在此`特殊场景`下：接收来自 socket buffer 的网络数据，应用进程不需要中间处理、直接进行持久化时。**可以使用 mmap 内存文件映射**。
+### 3.1.3 Memory Mapped Files（mmap）
 
-> **Memory Mapped Files**
+> 简称mmap，简单描述其**作用**就是：将磁盘文件映射到内存, 用户通过修改内存就能修改磁盘文件。
+> 
+>**工作原理**是直接利用操作系统的Page来实现文件到物理内存的直接映射。完成映射之后你对[物理内存](https://www.zhihu.com/search?q=物理内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})的操作会被同步到硬盘上（操作系统在适当的时候）。
+> 
+> 通过mmap，进程像读写硬盘一样读写内存（当然是[虚拟机内存](https://www.zhihu.com/search?q=虚拟机内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})），也不必关心内存的大小有[虚拟内存](https://www.zhihu.com/search?q=虚拟内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})为我们兜底。使用这种方式可以获取很大的I/O提升，省去了用户空间到内核空间复制的开销。
 >
-> 简称mmap，简单描述其作用就是：将磁盘文件映射到内存, 用户通过修改内存就能修改磁盘文件。
-> 它的工作原理是直接利用操作系统的Page来实现文件到物理内存的直接映射。完成映射之后你对[物理内存](https://www.zhihu.com/search?q=物理内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})的操作会被同步到硬盘上（操作系统在适当的时候）。
->
-> 通过mmap，进程像读写硬盘一样读写内存（当然是[虚拟机内存](https://www.zhihu.com/search?q=虚拟机内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})），也不必关心内存的大小有[虚拟内存](https://www.zhihu.com/search?q=虚拟内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})为我们兜底。
-> 使用这种方式可以获取很大的I/O提升，省去了用户空间到内核空间复制的开销。
->
-> mmap也有一个很明显的缺陷——不可靠，写到mmap中的数据并没有被真正的写到硬盘，操作系统会在程序主动调用flush的时候才把数据真正的写到硬盘。Kafka提供了一个参数——producer.type来控制是不是主动flush；如果Kafka写入到mmap之后就立即flush然后再返回Producer叫同步(sync)；写入mmap之后立即返回Producer不调用flush叫异步(async)。
+> mmap也有一个很明显的**缺陷**——不可靠，写到mmap中的数据并没有被真正的写到硬盘，操作系统会在程序主动调用flush的时候才把数据真正的写到硬盘。Kafka提供了一个参数——producer.type来控制是不是主动flush；如果Kafka写入到mmap之后就立即flush然后再返回Producer叫同步(sync)；写入mmap之后立即返回Producer不调用flush叫异步(async)。
 
 ![img](../图片/7b2d0b80328143322445f55f954144ec.png)
 
-### 过程二：磁盘文件通过网络发送（Broker 到 Consumer）
+## 3.2 过程二：磁盘文件通过网络发送（Broker到Consumer）
 
 传统方式实现：先读取磁盘、再用 socket 发送，实际也是进过四次 copy
 
-```
+```java
 buffer = File.read 
 Socket.send(buffer)
 ```
 
-这一过程可以类比上边的生产消息：
 
-1. **首先通过系统调用将文件数据读入到内核态 Buffer（DMA 拷贝）**
-2. **然后应用程序将内存态 Buffer 数据读入到用户态 Buffer（CPU 拷贝）**
-3. **接着用户程序通过 Socket 发送数据时将用户态 Buffer 数据拷贝到内核态 Buffer（CPU 拷贝）**
-4. **最后通过 DMA 拷贝将数据拷贝到 NIC Buffer**
 
-Linux 2.4+ 内核通过 sendfile 系统调用，提供了零拷贝。数据通过 DMA 拷贝到内核态 Buffer 后，直接通过 DMA 拷贝到 NIC Buffer，无需 CPU 拷贝。这也是零拷贝这一说法的来源。除了减少数据拷贝外，因为整个读文件 - 网络发送由一个 sendfile 调用完成，整个过程只有两次上下文切换，因此大大提高了性能。
+### 3.2.1 这一过程可以类比上边的生产消息：
+
+1. 首先通过系统调用将文件数据读入到内核态 Buffer（**DMA Copy**）
+2. 然后应用程序将内存态 Buffer 数据读入到用户态 Buffer（**CPU Copy**）
+3. 接着用户程序通过 Socket 发送数据时将用户态 Buffer 数据拷贝到内核态 Buffer（**CPU Copy**）
+4. 最后通过 **DMA Copy**将数据拷贝到 NIC Buffer
+
+
+
+Linux 2.4+ 内核通过 sendfile 系统调用，提供了零拷贝。数据通过 DMA 拷贝到内核态 Buffer 后，直接通过 DMA 拷贝到 NIC Buffer，无需 CPU 拷贝。这也是零拷贝这一说法的来源。除了减少数据拷贝外，因为整个读文件 - 网络发送由一个 sendfile 调用完成，整个过程**只有两次上下文切换**，因此大大提高了性能。
 
 ![img](../图片/fb5b1c0a4358a5c7608251c91e6b971b.png)
 
@@ -97,9 +104,7 @@ Kafka 在这里采用的方案是通过 NIO 的 `transferTo/transferFrom` 调用
 
 
 
-
-
-# mmap 和 sendfile总结
+##3.3 mmap 和 sendfile总结
 
 1. 都是Linux内核提供、实现零拷贝的API；
 2. sendfile 是将读到内核空间的数据，转到socket buffer，进行网络发送；
@@ -107,7 +112,7 @@ Kafka 在这里采用的方案是通过 NIO 的 `transferTo/transferFrom` 调用
 
 
 
-### 参考
+# 参考
 
 > https://zhuanlan.zhihu.com/p/78335525
 >
