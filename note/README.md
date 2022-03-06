@@ -1,2 +1,2 @@
-my note
+My Note
 
