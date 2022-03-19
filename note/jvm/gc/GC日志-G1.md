@@ -1,3 +1,147 @@
+## Young GC日志
+
+```shell
+{Heap before GC invocations=12 (full 1):
+ garbage-first heap   total 3145728K, used 336645K [0x0000000700000000, 0x00000007c0000000, 0x00000007c0000000)
+  region size 1024K, 172 young (176128K), 13 survivors (13312K)
+ Metaspace       used 29944K, capacity 30196K, committed 30464K, reserved 1077248K
+  class space    used 3391K, capacity 3480K, committed 3584K, reserved 1048576K
+2014-11-14T17:57:23.654+0800: 27.884: [GC pause (G1 Evacuation Pause) (young)
+Desired survivor size 11534336 bytes, new threshold 15 (max 15)
+- age   1:    5011600 bytes,    5011600 total
+ 27.884: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 1461, predicted base time: 35.25 ms, remaining time: 64.75 ms, target pause time: 100.00 ms]
+ 27.884: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 159 regions, survivors: 13 regions, predicted young region time: 44.09 ms]
+ 27.884: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 159 regions, survivors: 13 regions, old: 0 regions, predicted pause time: 79.34 ms, target pause time: 100.00 ms]
+, 0.0158389 secs]
+   [Parallel Time: 8.1 ms, GC Workers: 4]
+      [GC Worker Start (ms): Min: 27884.5, Avg: 27884.5, Max: 27884.5, Diff: 0.1]
+      [Ext Root Scanning (ms): Min: 0.4, Avg: 0.8, Max: 1.2, Diff: 0.8, Sum: 3.1]
+      [Update RS (ms): Min: 0.0, Avg: 0.3, Max: 0.6, Diff: 0.6, Sum: 1.4]
+         [Processed Buffers: Min: 0, Avg: 2.8, Max: 5, Diff: 5, Sum: 11]
+      [Scan RS (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.1, Sum: 0.3]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.2, Diff: 0.2, Sum: 0.6]
+      [Object Copy (ms): Min: 4.9, Avg: 5.1, Max: 5.2, Diff: 0.3, Sum: 20.4]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.4, Max: 1.3, Diff: 1.3, Sum: 1.4]
+      [GC Worker Total (ms): Min: 6.4, Avg: 6.8, Max: 7.8, Diff: 1.4, Sum: 27.2]
+      [GC Worker End (ms): Min: 27891.0, Avg: 27891.3, Max: 27892.3, Diff: 1.3]
+   [Code Root Fixup: 0.5 ms]
+   [Code Root Migration: 1.3 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.2 ms]
+   [Other: 5.8 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 5.0 ms]
+      [Ref Enq: 0.1 ms]
+      [Redirty Cards: 0.0 ms]
+      [Free CSet: 0.2 ms]
+   [Eden: 159.0M(159.0M)->0.0B(301.0M) Survivors: 13.0M->11.0M Heap: 328.8M(3072.0M)->167.3M(3072.0M)]
+Heap after GC invocations=13 (full 1):
+ garbage-first heap   total 3145728K, used 171269K [0x0000000700000000, 0x00000007c0000000, 0x00000007c0000000)
+  region size 1024K, 11 young (11264K), 11 survivors (11264K)
+ Metaspace       used 29944K, capacity 30196K, committed 30464K, reserved 1077248K
+  class space    used 3391K, capacity 3480K, committed 3584K, reserved 1048576K
+}
+ [Times: user=0.05 sys=0.01, real=0.02 secs]
+```
+
+### 详解
+
+> garbage-first heap total 3145728K, used 336645K [0x0000000700000000, 0x00000007c0000000, 0x00000007c0000000) 
+
+表示使用了G1垃圾收集器，total heap 3145728K，使用了336645K。
+
+> region size 1024K, 172 young (176128K), 13 survivors (13312K)
+
+ Region大小为1M，青年代占用了172个（共176128K），幸存区占用了13个（共13312K）。 
+
+> Metaspace used 29944K, capacity 30196K, committed 30464K, reserved 1077248K class space used 3391K, capacity 3480K, committed 3584K, reserved 1048576K 
+
+java 8的新特性，去掉永久区，添加了元数据区，这块不是本文重点，不再赘述。需要注意的是，之所以有committed和reserved，是因为没有设置MetaspaceSize=MaxMetaspaceSize。
+
+> [GC pause (G1 Evacuation Pause) (young) 
+
+GC原因，新生代minor GC。 
+
+> [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 1461, predicted base time: 35.25 ms, remaining time: 64.75 ms, target pause time: 100.00 ms] 
+
+发生minor GC和full GC时，所有相关region都是要回收的。而发生并发GC时，会根据目标停顿时间动态选择部分垃圾对并多的Region回收，这一步就是选择Region。_pending_cards是关于RSet的Card Table。predicted base time是预测的扫描card table时间。 
+
+> [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 159 regions, survivors: 13 regions, predicted young region time: 44.09 ms] 
+
+这一步是添加Region到collection set，新生代一共159个Region，13个幸存区Region，这也和之前的（172 young (176128K), 13 survivors (13312K)）吻合。预计收集时间是44.09 ms。 
+
+> [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 159 regions, survivors: 13 regions, old: 0 regions, predicted pause time: 79.34 ms, target pause time: 100.00 ms] 
+
+这一步是对上面两步的总结。预计总收集时间79.34ms。 
+
+> [Parallel Time: 8.1 ms, GC Workers: 4]
+
+由于收集过程是多线程并行（并发）进行，这里是4个线程，总共耗时8.1ms（wall clock time） 
+
+> [GC Worker Start (ms): Min: 27884.5, Avg: 27884.5, Max: 27884.5, Diff: 0.1] 
+
+收集线程开始的时间，使用的是相对时间，Min是最早开始时间，Avg是平均开始时间，Max是最晚开始时间，Diff是Max-Min（此处的0.1貌似有问题） 
+
+> [Ext Root Scanning (ms): Min: 0.4, Avg: 0.8, Max: 1.2, Diff: 0.8, Sum: 3.1] 
+
+扫描Roots花费的时间，Sum表示total cpu time，下同。 
+
+> [Update RS (ms): Min: 0.0, Avg: 0.3, Max: 0.6, Diff: 0.6, Sum: 1.4] [Processed Buffers: Min: 0, Avg: 2.8, Max: 5, Diff: 5, Sum: 11] 
+
+Update RS (ms)是每个线程花费在更新Remembered Set上的时间。 
+
+> [Scan RS (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.1, Sum: 0.3] 
+
+扫描CS中的region对应的RSet，因为RSet是points-into，所以这样实现避免了扫描old generadion region，但是会产生float garbage。 
+
+> [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.2, Diff: 0.2, Sum: 0.6] 
+
+扫描code root耗时。code root指的是经过JIT编译后的代码里，引用了heap中的对象。引用关系保存在RSet中。 
+
+> [Object Copy (ms): Min: 4.9, Avg: 5.1, Max: 5.2, Diff: 0.3, Sum: 20.4] 
+
+拷贝活的对象到新region的耗时。 
+
+> [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0] 
+
+线程结束，在结束前，它会检查其他线程是否还有未扫描完的引用，如果有，则”偷”过来，完成后再申请结束，这个时间是线程之前互相同步所花费的时间。 
+
+> [GC Worker Other (ms): Min: 0.0, Avg: 0.4, Max: 1.3, Diff: 1.3, Sum: 1.4] 
+
+花费在其他工作上（未列出）的时间。 
+
+> [GC Worker Total (ms): Min: 6.4, Avg: 6.8, Max: 7.8, Diff: 1.4, Sum: 27.2] 
+
+每个线程花费的时间和。 
+
+> [GC Worker End (ms): Min: 27891.0, Avg: 27891.3, Max: 27892.3, Diff: 1.3] 
+
+每个线程结束的时间。 
+
+> [Code Root Fixup: 0.5 ms] 
+
+用来将code root修正到正确的evacuate之后的对象位置所花费的时间。 
+
+> [Code Root Migration: 1.3 ms] 
+
+更新code root 引用的耗时，code root中的引用因为对象的evacuation而需要更新。 
+
+[Code Root Purge: 0.0 ms] 
+
+清除code root的耗时，code root中的引用已经失效，不再指向Region中的对象，所以需要被清除。 
+
+> [Clear CT: 0.2 ms] 
+
+清除card table的耗时。 
+
+> [Other: 5.8 ms] [Choose CSet: 0.0 ms] [Ref Proc: 5.0 ms] [Ref Enq: 0.1 ms] [Redirty Cards: 0.0 ms] [Free CSet: 0.2 ms] 
+
+其他事项共耗时5.8ms，其他事项包括选择CSet，处理已用对象，引用入ReferenceQueues，释放CSet中的region到free list。 
+
+> [Eden: 159.0M(159.0M)->0.0B(301.0M) Survivors: 13.0M->11.0M Heap: 328.8M(3072.0M)->167.3M(3072.0M)] 新生代清空了，下次扩容到301MB。
+
+
 ### 新生代收集
 
 和其他垃圾收集器一样，G1也使用`-XX:PrintGCDetails`打印出详细的垃圾收集日志，下面这张图是新生代收集的标准流程，我在这里将它分成了6个步骤：
