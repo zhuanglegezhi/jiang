@@ -64,17 +64,21 @@ file.flush()
 
 ![img](../图片/fdfe29d209918316409200f10cf63ebd.png)
 
-对于 kafka 来说，Producer 生产的数据存到 broker，这个过程读取到 socket buffer 的网络数据，其实可以直接在内核空间完成落盘。并没有必要将 socket buffer的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker 收到生产者的数据，就是为了持久化。在此特殊场景下：接收来自 socket buffer 的网络数据，应用进程不需要中间处理、直接进行持久化时。**可以使用 mmap 内存文件映射**。
+​	对于 kafka 来说，Producer生产的数据存到 broker，这个过程读取到socket buffer的网络数据，其实可以直接在内核空间完成落盘。并没有必要将socket buffer的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker收到生产者的数据，就是为了持久化。在此特殊场景下：接收来自 socket buffer 的网络数据，应用进程不需要中间处理、直接进行持久化时。**可以使用 mmap 内存文件映射**。
 
 ### 3.1.3 Memory Mapped Files（mmap）
 
-> 简称mmap，简单描述其**作用**就是：将磁盘文件映射到内存, 用户通过修改内存就能修改磁盘文件。
-> 
->**工作原理**是直接利用操作系统的Page来实现文件到物理内存的直接映射。完成映射之后你对[物理内存](https://www.zhihu.com/search?q=物理内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})的操作会被同步到硬盘上（操作系统在适当的时候）。
-> 
-> 通过mmap，进程像读写硬盘一样读写内存（当然是[虚拟机内存](https://www.zhihu.com/search?q=虚拟机内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})），也不必关心内存的大小有[虚拟内存](https://www.zhihu.com/search?q=虚拟内存&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A78335525})为我们兜底。使用这种方式可以获取很大的I/O提升，省去了用户空间到内核空间复制的开销。
->
-> mmap也有一个很明显的**缺陷**——不可靠，写到mmap中的数据并没有被真正的写到硬盘，操作系统会在程序主动调用flush的时候才把数据真正的写到硬盘。Kafka提供了一个参数——producer.type来控制是不是主动flush；如果Kafka写入到mmap之后就立即flush然后再返回Producer叫同步(sync)；写入mmap之后立即返回Producer不调用flush叫异步(async)。
+- 简称mmap
+- **作用**
+
+  - 将磁盘文件映射到内存, 用户通过修改内存就能修改磁盘文件。
+- **工作原理**
+
+  - 是直接利用操作系统的Page来实现文件到物理内存的直接映射。完成映射之后你对物理内存的操作会被同步到硬盘上（操作系统在适当的时候）
+- 通过mmap，进程像读写硬盘一样读写内存（当然是虚拟机内存为我们兜底。使用这种方式可以获取很大的I/O提升，省去了用户空间到内核空间复制的开销
+- **缺陷**
+  - 不可靠，写到mmap中的数据并没有被真正的写到硬盘，操作系统会在程序主动调用flush的时候才把数据真正的写到硬盘。Kafka提供了一个参数——producer.type来控制是不是主动flush；如果Kafka写入到mmap之后就立即flush然后再返回Producer叫同步(sync)；写入mmap之后立即返回Producer不调用flush叫异步(async)。
+  
 
 ![img](../图片/7b2d0b80328143322445f55f954144ec.png)
 
@@ -86,11 +90,9 @@ file.flush()
 
   ```java
   // java.nio.channels.FileChannel#map
-  public abstract MappedByteBuffer map(MapMode mode,
-                                       long position, long size)
-      throws IOException;
+  public abstract MappedByteBuffer map(MapMode mode, long position, long size)throws IOException;
   ```
-
+  
 - 使用 MappedByteBuffer类要注意的是：mmap的文件映射，在full gc时才会进行释放。当close时，需要手动清除内存映射文件，可以反射调用sun.misc.Cleaner方法。
 
 
@@ -137,14 +139,10 @@ Linux 2.4+ 内核通过 sendfile 系统调用，提供了零拷贝。数据通�
 
 ```java
 // java.nio.channels.FileChannel#transferTo
-public abstract long transferTo(long position, long count,
-                                WritableByteChannel target)
-    throws IOException;
+public abstract long transferTo(long position, long count, WritableByteChannel target) throws IOException;
 
 // java.nio.channels.FileChannel#transferFrom
-public abstract long transferFrom(ReadableByteChannel src,
-                                      long position, long count)
-        throws IOException;
+public abstract long transferFrom(ReadableByteChannel src, long position, long count) throws IOException;
 ```
 
 - 把磁盘文件读取OS内核缓冲区后的fileChannel，直接转给socketChannel发送；底层就是sendfile。消费者从broker读取数据，就是由此实现。
