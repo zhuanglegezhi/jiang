@@ -1,7 +1,15 @@
+package coupang;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class LRUCacheV2<K, V> {
+/**
+ * Least Recently Used，即最近最少使用
+ *
+ * @param <K>
+ * @param <V>
+ */
+public class LRUCache<K, V> implements Cache<K, V> {
 
     private final Map<K, Node<K, V>> map;
     private final int capacity;
@@ -9,7 +17,8 @@ public class LRUCacheV2<K, V> {
     private final Node<K, V> head;
     private final Node<K, V> tail;
 
-    public LRUCacheV2(int capacity) {
+
+    public LRUCache(int capacity) {
         this.capacity = capacity;
         map = new HashMap<>(capacity);
         head = new Node<>();
@@ -18,6 +27,7 @@ public class LRUCacheV2<K, V> {
         tail.pre = head;
     }
 
+    @Override
     public V get(K key) {
         Node<K, V> node = map.get(key);
         if (node != null) {
@@ -32,6 +42,7 @@ public class LRUCacheV2<K, V> {
         addHead(node);
     }
 
+    @Override
     public void put(K key, V value) {
         Node<K, V> node = new Node<>();
         node.key = key;
@@ -81,17 +92,19 @@ public class LRUCacheV2<K, V> {
 
         public Node() {
         }
+
     }
 
     public static void main(String[] args) {
-        LRUCacheV2<Integer, Integer> lruCacheV2 = new LRUCacheV2<>(3);
-        lruCacheV2.put(1, 1);
-        lruCacheV2.put(2, 2);
-        lruCacheV2.put(3, 3);
-        Integer cache_2 = lruCacheV2.get(2);
+        LRUCache<Integer, Integer> lruCache = new LRUCache<>(3);
+        lruCache.put(1, 1);
+        lruCache.put(2, 2);
+        lruCache.put(3, 3);
+        Integer cache_2 = lruCache.get(2);
 
-        lruCacheV2.put(4, 4);
-        lruCacheV2.put(5, 5);
+        lruCache.put(4, 4);
+        lruCache.put(5, 5);
     }
+
 
 }
