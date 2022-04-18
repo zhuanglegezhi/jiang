@@ -25,4 +25,5 @@ public class CacheFactory<K, V> implements Cache<K, V> {
     public enum Strategy {
         LRU, LFU
     }
+
 }
