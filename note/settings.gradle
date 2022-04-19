@@ -1,2 +1,4 @@
 include 'book'
+include 'book:untitled'
+findProject(':book:untitled')?.name = 'untitled'
 
