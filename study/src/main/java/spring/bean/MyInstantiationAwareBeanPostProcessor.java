@@ -1,4 +1,4 @@
-package springBeanTest;
+package spring.bean;
 
 import java.beans.PropertyDescriptor;
 

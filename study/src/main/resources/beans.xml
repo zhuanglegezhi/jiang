@@ -7,16 +7,16 @@
             http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
 
-    <bean id="beanPostProcessor" class="springBeanTest.MyBeanPostProcessor">
+    <bean id="beanPostProcessor" class="spring.bean.MyBeanPostProcessor">
     </bean>
 
-    <bean id="instantiationAwareBeanPostProcessor" class="springBeanTest.MyInstantiationAwareBeanPostProcessor">
+    <bean id="instantiationAwareBeanPostProcessor" class="spring.bean.MyInstantiationAwareBeanPostProcessor">
     </bean>
 
-    <bean id="beanFactoryPostProcessor" class="springBeanTest.MyBeanFactoryPostProcessor">
+    <bean id="beanFactoryPostProcessor" class="spring.bean.MyBeanFactoryPostProcessor">
     </bean>
 
-    <bean id="person" class="springBeanTest.Person" init-method="myInit"
+    <bean id="person" class="spring.bean.Person" init-method="myInit"
           destroy-method="myDestory" scope="singleton" p:name="张三" p:address="广州"
           p:phone="15900000000" />
 

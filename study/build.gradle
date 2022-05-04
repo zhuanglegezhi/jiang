@@ -17,6 +17,12 @@ dependencies {
     // spring
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.4.2'
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.5.5'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter
+    implementation 'org.springframework.boot:spring-boot-starter:2.6.4'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.6'
+    implementation 'org.springframework.boot:spring-boot-starter-aop:2.6.6'
+    implementation 'org.springframework.data:spring-data-commons:2.6.3'
+    implementation 'org.springframework:spring-tx:3.0.5.RELEASE'
 
     // dubbo
     implementation group: 'org.apache.dubbo', name: 'dubbo', version: '2.7.13'

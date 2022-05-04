@@ -1,4 +1,4 @@
-package springBeanTest;
+package spring.bean;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
