@@ -40,6 +40,8 @@ dependencies {
     // jackson
     implementation 'com.fasterxml.jackson.core:jackson-core:2.13.1'
 
+    // guava
+    implementation 'com.google.guava:guava:31.1-jre'
 
     // commons-pool2
     implementation group: 'org.apache.commons', name: 'commons-pool2', version: '2.11.1'
