@@ -16,8 +16,12 @@ public class StringTableTest {
 
     //    private
     public static void main(String[] args) throws JsonProcessingException {
+        String s1 = "a";
+        String s2 = "a";
+        s1 = "b";
+        s1 += "c";
 
-        testJackson();
+//        testJackson();
     }
 
     private static void testJackson() throws JsonProcessingException {
@@ -30,6 +34,8 @@ public class StringTableTest {
             A readA = objectMapper.readValue(string, A.class);
         }
     }
+
+
 
     @Data
     static class A implements Serializable {
