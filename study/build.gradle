@@ -26,6 +26,8 @@ dependencies {
 
     // dubbo
     implementation group: 'org.apache.dubbo', name: 'dubbo', version: '2.7.13'
+    implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.13'
+
 
     implementation group: 'org.reactivestreams', name: 'reactive-streams', version: '1.0.3'
 
