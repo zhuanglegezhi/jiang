@@ -1,4 +1,6 @@
-package coupang;
+package coupang.lru;
+
+import coupang.lru.Cache;
 
 import java.util.HashMap;
 import java.util.LinkedList;

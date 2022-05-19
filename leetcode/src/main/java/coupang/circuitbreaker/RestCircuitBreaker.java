@@ -1,4 +1,4 @@
-package resilience4j;
+package coupang.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;

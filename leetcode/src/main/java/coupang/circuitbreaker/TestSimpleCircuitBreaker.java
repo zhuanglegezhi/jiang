@@ -1,4 +1,4 @@
-package resilience4j;
+package coupang.circuitbreaker;
 
 /**
  * Created by zz on 2022/5/16.
