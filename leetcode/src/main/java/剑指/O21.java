@@ -3,7 +3,7 @@ package 剑指;
 /**
  * Created by zz on 2022/5/22.
  */
-public class L21 {
+public class O21 {
 
     public int[] exchange(int[] nums) {
         int l = 0, j = nums.length - 1;
@@ -26,7 +26,7 @@ public class L21 {
     }
 
     public static void main(String[] args) {
-        new L21().exchange(new int[]{1, 2, 3, 4});
+        new O21().exchange(new int[]{1, 2, 3, 4});
     }
 
 }
