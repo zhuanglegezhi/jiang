@@ -63,7 +63,7 @@ public class CircuitBreaker {
      * @param failThreshold                CLOSED -> OPEN 的失败率阈值，0 ～ 1
      * @param minRequestCount              CLOSED -> OPEN 最小请求限制
      * @param halfOpenRequiredRequestCount HALF_OPEN -> OPEN 最大请求数，也是需要连续成功的数量
-     * @param recoverIntervalMs           HALF_OPEN -> OPEN 最小间隔时间
+     * @param recoverIntervalMs            HALF_OPEN -> OPEN 最小间隔时间
      */
     public CircuitBreaker(double failThreshold,
                           long minRequestCount,
@@ -157,7 +157,10 @@ public class CircuitBreaker {
 
         if (tryChangeStatus(Status.HALF_OPEN, Status.OPEN)) {
             // HALF_OPEN状态下, 失败一次即重新OPEN
+            this.requestResourceCount = new AtomicLong(0);
             this.halfOpenSuccessRequestCount = new AtomicLong(0);
+            this.failCount = new AtomicLong(0);
+
             this.lastOpenMs = System.currentTimeMillis();
         }
         if (requestCount >= minRequestCount && currentFailRate() > failThreshold && tryChangeStatus(Status.CLOSED, Status.OPEN)) {
