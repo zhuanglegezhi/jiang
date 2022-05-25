@@ -6,12 +6,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-/**
- * Created by zz on 2022/5/24.
+/*
+  Created by zz on 2022/5/24.
+  题目:
+  - 提供用户友好的使用接口
+  - 当异常达到阈值（失败率阈值，最小数量阈值）可以进行熔断
+  - 如果在熔断状态下可以自恢复（某个时间后，放部分流量进来尝试恢复，都成功则 -> closed，否则opened）
  */
 @Slf4j
 public class CircuitBreaker {
 
+    //****** 自定义配置项 ****** /
     /**
      * 失败率阈值
      */
@@ -21,52 +26,69 @@ public class CircuitBreaker {
      */
     private final long minRequestCount;
     /**
-     * HALF_OPEN 状态下尝试恢复请求数, （最多只能放这么多请求进来）
+     * HALF_OPEN 状态下尝试恢复请求数（最多只能放这么多请求进来）
      */
-    private final long recoverRequiredRequestCount;
+    private final long halfOpenRequiredRequestCount;
     /**
      * OPEN -> HALF_OPEN 间隔
      */
     private final long recoverIntervalMs;
+
+
+    //****** CB统计项 ****** /
     /**
      * CB状态
      */
     private final AtomicReference<Status> status;
-
     /**
-     * 请求数
+     * 请求数(请求下游资源数目)
      */
-    private AtomicLong requestCount;
-    /**
-     * HALF_OPEN -> OPEN 的时候已经连续成功数目
-     */
-    private AtomicLong recoverSuccessRequestCount;
+    private AtomicLong requestResourceCount;
     /**
      * 请求失败
      */
     private AtomicLong failCount;
     /**
+     * HALF_OPEN -> OPEN 的时候已经连续成功数目
+     */
+    private AtomicLong halfOpenSuccessRequestCount;
+    /**
      * 最近一次状态变成OPEN的时间戳
      */
-    private long lastFailMs;
+    private long lastOpenMs;
 
-
-    public CircuitBreaker(double failThreshold, long minRequestCount, long recoverRequiredRequestCount, long recoverIntervalMs) {
-        // 可配置值
+    /**
+     * CB Constructor
+     *
+     * @param failThreshold                CLOSED -> OPEN 的失败率阈值，0 ～ 1
+     * @param minRequestCount              CLOSED -> OPEN 最小请求限制
+     * @param halfOpenRequiredRequestCount HALF_OPEN -> OPEN 最大请求数，也是需要连续成功的数量
+     * @param recoverIntervalMs           HALF_OPEN -> OPEN 最小间隔时间
+     */
+    public CircuitBreaker(double failThreshold,
+                          long minRequestCount,
+                          long halfOpenRequiredRequestCount,
+                          long recoverIntervalMs) {
         this.failThreshold = failThreshold;
         this.minRequestCount = minRequestCount;
-        this.recoverRequiredRequestCount = recoverRequiredRequestCount;
+        this.halfOpenRequiredRequestCount = halfOpenRequiredRequestCount;
         this.recoverIntervalMs = recoverIntervalMs;
-
         this.status = new AtomicReference<>(Status.CLOSED);
-        initCounts();
+        initCircuitBreakerCounts();
     }
 
-    private void initCounts() {
-        this.requestCount = new AtomicLong(0);
-        this.recoverSuccessRequestCount = new AtomicLong(0);
+    public static CircuitBreaker of(double failThreshold,
+                                    long minRequestCount,
+                                    long halfOpenRequiredRequestCount,
+                                    long halfOpenIntervalMs) {
+        return new CircuitBreaker(failThreshold, minRequestCount, halfOpenRequiredRequestCount, halfOpenIntervalMs);
+    }
+
+    private void initCircuitBreakerCounts() {
+        this.requestResourceCount = new AtomicLong(0);
+        this.halfOpenSuccessRequestCount = new AtomicLong(0);
         this.failCount = new AtomicLong(0);
-        this.lastFailMs = -1L;
+        this.lastOpenMs = -1L;
     }
 
     public <T> T decorate(Supplier<T> supplier) {
@@ -76,7 +98,7 @@ public class CircuitBreaker {
                 recordSuccess();
                 return t;
             } else {
-                log.info("fail-fast, status={}", status.get());
+                log.info("fail-fast, status = [{}]", status.get());
             }
         } catch (Exception e) {
             recordFail();
@@ -90,7 +112,7 @@ public class CircuitBreaker {
                 runnable.run();
                 recordSuccess();
             } else {
-                log.info("fail-fast, status={}", status.get());
+                log.info("fail-fast, status = [{}]", status.get());
             }
         } catch (Exception e) {
             recordFail();
@@ -98,48 +120,52 @@ public class CircuitBreaker {
     }
 
     private boolean allowExecute() {
-        if (status.get() == Status.CLOSED) {
+        Status st = this.status.get();
+
+        if (st == Status.CLOSED) {
             return true;
         }
-        if (status.get() == Status.HALF_OPEN) {
+
+        if (st == Status.HALF_OPEN) {
             // 这里考察要不要少放量一点进来
-            return this.recoverSuccessRequestCount.get() <= recoverRequiredRequestCount;
+            return this.halfOpenSuccessRequestCount.get() < halfOpenRequiredRequestCount;
         }
-        return shouldRecover() && (changeStatus(Status.OPEN, Status.HALF_OPEN));
+
+        return afterRecoverInterval() && tryChangeStatus(Status.OPEN, Status.HALF_OPEN);
     }
 
-    private boolean shouldRecover() {
-        return System.currentTimeMillis() >= this.lastFailMs + this.recoverIntervalMs;
+    private boolean afterRecoverInterval() {
+        return System.currentTimeMillis() >= this.lastOpenMs + this.recoverIntervalMs;
     }
 
     private double currentFailRate() {
-        return 1.0 * failCount.get() / requestCount.get();
+        return 1.0 * failCount.get() / requestResourceCount.get();
     }
 
     private void recordSuccess() {
-        this.requestCount.incrementAndGet();
+        this.requestResourceCount.incrementAndGet();
         if (status.get() == Status.HALF_OPEN) {
-            if (recoverSuccessRequestCount.incrementAndGet() >= this.recoverRequiredRequestCount && changeStatus(Status.HALF_OPEN, Status.CLOSED)) {
-                initCounts();
+            if (halfOpenSuccessRequestCount.incrementAndGet() >= this.halfOpenRequiredRequestCount && tryChangeStatus(Status.HALF_OPEN, Status.CLOSED)) {
+                initCircuitBreakerCounts();
             }
         }
     }
 
     private void recordFail() {
-        long _requestCount = this.requestCount.incrementAndGet();
+        long requestCount = this.requestResourceCount.incrementAndGet();
         this.failCount.incrementAndGet();
 
-        if (changeStatus(Status.HALF_OPEN, Status.OPEN)) {
+        if (tryChangeStatus(Status.HALF_OPEN, Status.OPEN)) {
             // HALF_OPEN状态下, 失败一次即重新OPEN
-            this.recoverSuccessRequestCount = new AtomicLong(0);
-            this.lastFailMs = System.currentTimeMillis();
+            this.halfOpenSuccessRequestCount = new AtomicLong(0);
+            this.lastOpenMs = System.currentTimeMillis();
         }
-        if (_requestCount >= minRequestCount && currentFailRate() > failThreshold && changeStatus(Status.CLOSED, Status.OPEN)) {
-            this.lastFailMs = System.currentTimeMillis();
+        if (requestCount >= minRequestCount && currentFailRate() > failThreshold && tryChangeStatus(Status.CLOSED, Status.OPEN)) {
+            this.lastOpenMs = System.currentTimeMillis();
         }
     }
 
-    private boolean changeStatus(Status s1, Status s2) {
+    private boolean tryChangeStatus(Status s1, Status s2) {
         if (status.compareAndSet(s1, s2)) {
             log.info("status changes, [{}] => [{}]", s1, s2);
             return true;
