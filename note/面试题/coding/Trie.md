@@ -10,7 +10,9 @@ Trie() 初始化前缀树对象。
 void insert(String word) 向前缀树中插入字符串 word 。
 boolean search(String word) 如果字符串 word 在前缀树中，返回 true（即，在检索之前已经插入）；否则，返回 false 。
 boolean startsWith(String prefix) 如果之前已经插入的字符串 word 的前缀之一为 prefix ，返回 true ；否则，返回 false 。
- 
+int countWordsEqualTo(String word) 返回前缀树中字符串 word 的实例个数。
+int countWordsStartingWith(String prefix) 返回前缀树中以 prefix 为前缀的字符串个数。
+  
 提示：
 1 <= word.length, prefix.length <= 2000
 word 和 prefix 仅由小写英文字母组成
@@ -18,8 +20,6 @@ word 和 prefix 仅由小写英文字母组成
 2.写测试用例
 
 3.加分项：
-int countWordsEqualTo(String word) 返回前缀树中字符串 word 的实例个数。
-int countWordsStartingWith(String prefix) 返回前缀树中以 prefix 为前缀的字符串个数。
 
 
 解释

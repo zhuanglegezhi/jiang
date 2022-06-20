@@ -7,3 +7,9 @@
 3. 用户友好接口，可以自定义选择LRU/LFU策略
 4. 支持TTL
 5. 考虑线程安全
+
+
+
+
+
+https://www.cnblogs.com/myseries/articles/12776138.html
