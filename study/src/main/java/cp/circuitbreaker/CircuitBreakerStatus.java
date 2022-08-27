@@ -1,4 +1,4 @@
-package coupang.circuitbreaker;
+package cp.circuitbreaker;
 
 /**
  * Created by zz on 2022/5/16.

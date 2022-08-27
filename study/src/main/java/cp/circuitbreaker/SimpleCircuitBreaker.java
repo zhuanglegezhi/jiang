@@ -1,4 +1,4 @@
-package coupang.circuitbreaker;
+package cp.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;

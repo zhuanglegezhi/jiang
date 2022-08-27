@@ -1,4 +1,4 @@
-package coupang.circuitbreaker.test;
+package cp.circuitbreaker.test;
 
 import lombok.extern.slf4j.Slf4j;
 

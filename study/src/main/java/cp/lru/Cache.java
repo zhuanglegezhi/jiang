@@ -1,4 +1,4 @@
-package coupang.lru;
+package cp.lru;
 
 /**
  * Created by zz on 2022/4/7.

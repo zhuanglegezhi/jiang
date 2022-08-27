@@ -1,4 +1,4 @@
-package coupang.lru;
+package cp.lru;
 
 import java.util.HashMap;
 import java.util.LinkedList;
