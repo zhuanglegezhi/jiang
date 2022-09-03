@@ -1,4 +1,4 @@
-package cp.circuitbreaker;
+package interview.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;

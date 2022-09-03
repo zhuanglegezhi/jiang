@@ -1,4 +1,4 @@
-package cp.lru;
+package interview.lru;
 
 import java.util.HashMap;
 import java.util.LinkedList;

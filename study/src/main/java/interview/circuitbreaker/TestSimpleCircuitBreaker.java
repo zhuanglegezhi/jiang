@@ -1,4 +1,4 @@
-package cp.circuitbreaker;
+package interview.circuitbreaker;
 
 /**
  * Created by zz on 2022/5/16.

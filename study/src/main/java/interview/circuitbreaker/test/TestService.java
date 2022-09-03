@@ -1,4 +1,4 @@
-package cp.circuitbreaker.test;
+package interview.circuitbreaker.test;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-package cp.lru;
+package interview.lru;
 
 /**
  * Created by zz on 2022/4/7.
