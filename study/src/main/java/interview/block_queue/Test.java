@@ -11,7 +11,12 @@ public class Test {
     public static void main(String[] args) throws Exception {
 
         // 创建一个大小为2的阻塞队列
-        final MyBlockingQueue q = new MyBlockingQueue(2);
+        // 测试Synchronized 版本
+//        final SynchronizedBlockingQueue q = new SynchronizedBlockingQueue(2);
+
+        // 测试Lock 版本
+        final LockBlockingQueue q = new LockBlockingQueue(2);
+
 
         // 创建2个线程
         final int threads = 2;

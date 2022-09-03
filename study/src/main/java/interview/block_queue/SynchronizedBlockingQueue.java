@@ -3,9 +3,11 @@ package interview.block_queue;
 /**
  * Created by zz on 2022/9/3.
  * <p>
+ * synchronized版本
+ * <p>
  * https://zhuanlan.zhihu.com/p/64156753
  */
-public class MyBlockingQueue {
+public class SynchronizedBlockingQueue {
 
     private final Object[] items;
 
@@ -15,7 +17,7 @@ public class MyBlockingQueue {
 
     private int count;
 
-    public MyBlockingQueue(int capacity) {
+    public SynchronizedBlockingQueue(int capacity) {
         if (capacity <= 0) {
             throw new IllegalArgumentException();
         }
