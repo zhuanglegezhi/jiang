@@ -3,9 +3,10 @@
 ![img](../图片/auto-orient,1.jpeg)
 
    - 顺序读写，是kafka利用磁盘特性的一个重要体现。
+     - kafka将来自Producer的数据，顺序追加在partition，partition就是一个文件，以此实现顺序写入。
+        - Consumer从broker读取数据时，因为自带了偏移量，接着上次读取的位置继续读，以此实现顺序读。
+
    - 顺序读写磁盘比随机读写快3个数量级
-   - kafka将来自Producer的数据，顺序追加在partition，partition就是一个文件，以此实现顺序写入。
-   - Consumer从broker读取数据时，因为自带了偏移量，接着上次读取的位置继续读，以此实现顺序读。
 
 
 
@@ -35,8 +36,6 @@
    - kafka数据写入磁盘前，数据先写到进程的内存空间。
    - consumer从broker读取数据，采用sendfile，将磁盘文件读到OS内核缓冲区后，直接转到socket buffer进行网络发送。
 
-
-
 ## 3.1 过程一： 网络数据持久化到磁盘 (Producer到Broker)
 
 传统模式下，数据从网络传输到文件需要 4 次数据拷贝、4 次上下文切换和两次系统调用。
@@ -56,9 +55,8 @@ file.flush()
 
 3. 接着用户程序将用户态 Buffer 再拷贝到内核态**（CPU Copy）**
 
-4. 最后通过 **DMA copy** 将数据拷贝到磁盘文件
+4. 最后通过 **DMA copy** 将数据拷贝到磁盘文件 
 
-   
 
 ### 3.1.2 同时，还伴随着**四次上下文切换**，
 
@@ -68,7 +66,6 @@ file.flush()
 
 ### 3.1.3 Memory Mapped Files（mmap）
 
-- 简称mmap
 - **作用**
 
   - 将磁盘文件映射到内存, 用户通过修改内存就能修改磁盘文件。
@@ -78,7 +75,7 @@ file.flush()
 - 通过mmap，进程像读写硬盘一样读写内存（当然是虚拟机内存为我们兜底。使用这种方式可以获取很大的I/O提升，省去了用户空间到内核空间复制的开销
 - **缺陷**
   - 不可靠，写到mmap中的数据并没有被真正的写到硬盘，操作系统会在程序主动调用flush的时候才把数据真正的写到硬盘。Kafka提供了一个参数——producer.type来控制是不是主动flush；如果Kafka写入到mmap之后就立即flush然后再返回Producer叫同步(sync)；写入mmap之后立即返回Producer不调用flush叫异步(async)。
-  
+
 
 ![img](../图片/7b2d0b80328143322445f55f954144ec.png)
 
@@ -159,11 +156,13 @@ public long transferFrom(FileChannel fileChannel, long position, long count) thr
 }
 ```
 
+
+
 ##3.3 mmap 和 sendfile总结
 
 1. 都是Linux内核提供、实现零拷贝的API；
-2. sendfile 是将读到内核空间的数据，转到socket buffer，进行网络发送；
 3. mmap将磁盘文件映射到内存，支持读和写，对内存的操作会反映在磁盘文件上。
+3. sendfile 是将读到内核空间的数据，转到socket buffer，进行网络发送；
 
 
 
