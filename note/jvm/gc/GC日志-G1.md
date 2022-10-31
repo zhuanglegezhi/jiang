@@ -284,3 +284,13 @@ G1的第二种收集活动是并发垃圾收集，并发垃圾收集的触发条
 2. 记录了让所有应用线程进入安全点所花费的总时间
 3. 记录了在两个安全点之间应用线程运行的时间
 
+
+
+
+
+
+
+# Reference
+
+https://www.redhat.com/en/blog/collecting-and-reading-g1-garbage-collector-logs-part-2
+
