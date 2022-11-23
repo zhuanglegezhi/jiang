@@ -8,39 +8,47 @@ package interview.ratelimiter;
  * 如果令牌发放的策略正确，这个系统即不会被拖垮，也能提高机器的利用率。Guava的RateLimiter限流组件，就是基于令牌桶算法实现的
  */
 public class TokenBucketRateLimiter implements RateLimiter {
-    /**
-     * 每秒处理数（放入令牌数量）
-     */
-    private long putTokenRate;
 
     /**
-     * 最后刷新时间
+     * 令牌桶的容量「限流器允许的最大突发流量」
      */
-    private long refreshTime;
-
+    private final long capacity;
     /**
-     * 令牌桶容量
+     * 令牌发放速率
      */
-    private long capacity;
-
+    private final long generatedPerSeconds;
     /**
-     * 当前桶内令牌数
+     * 最后一个令牌发放的时间
      */
-    private long currentToken = 0L;
+    long lastTokenTime = System.currentTimeMillis();
+    /**
+     * 当前令牌数量
+     */
+    private long currentTokens;
+
+    public TokenBucketRateLimiter(long generatedPerSeconds, int capacity) {
+        this.generatedPerSeconds = generatedPerSeconds;
+        this.capacity = capacity;
+    }
 
     @Override
     public boolean tryAcquire() {
-        long currentTime = System.currentTimeMillis();  //获取系统当前时间
-        long generateToken = (currentTime - refreshTime) / 1000 * putTokenRate; //生成的令牌 =(当前时间-上次刷新时间)* 放入令牌的速率
-        currentToken = Math.min(capacity, generateToken + currentToken); // 当前令牌数量 = 之前的桶内令牌数量+放入的令牌数量
-        refreshTime = currentTime; // 刷新时间
-
-        //桶里面还有令牌，请求正常处理
-        if (currentToken > 0) {
-            currentToken--; //令牌数量-1
+        /**
+         * 计算令牌当前数量
+         * 请求时间在最后令牌是产生时间相差大于等于额1s（为啥时1s？因为生成令牌的最小时间单位时s），则
+         * 1. 重新计算令牌桶中的令牌数
+         * 2. 将最后一个令牌发放时间重置为当前时间
+         */
+        long now = System.currentTimeMillis();
+        if (now - lastTokenTime >= 1000) {
+            long newPermits = (now - lastTokenTime) / 1000 * generatedPerSeconds;
+            currentTokens = Math.min(currentTokens + newPermits, capacity);
+            lastTokenTime = now;
+        }
+        if (currentTokens > 0) {
+            currentTokens--;
             return true;
         }
-
         return false;
     }
 
