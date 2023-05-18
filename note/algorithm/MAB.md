@@ -20,8 +20,16 @@ AB实验依赖于统计显著性的经典统计检测。
 
 ![img](../图片/84fc7af17c0443d094d93e922179f8b4~tplv-k3u1fbpfcp-zoom-in-crop-mark:4536:0:0:0.awebp)
 
+多臂老虎机实验通常比 A/B 测试更快地将更多观察结果分配给最佳臂。 因此，多臂老虎机实验的机会成本可能低于 A/B 测试。
 
 
+
+# 命名
+
+Bandit Policies
+
+- UCB
+- ...
 
 
 # Reference
