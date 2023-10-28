@@ -107,4 +107,3 @@ class SkiplistNode {
         this.forward = new SkiplistNode[maxLevel];
     }
 }
-
